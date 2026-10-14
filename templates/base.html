@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberShield - Intelligent Network Intrusion Detection System{% endblock %}</title>
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Cyber CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="cyber-theme">
+    <!-- Background Grid & Glow Overlay -->
+    <div class="cyber-grid-overlay"></div>
+    <div class="cyber-vignette"></div>
+
+    <!-- Main Navigation Bar -->
+    <header class="cyber-header">
+        <div class="header-brand">
+            <div class="shield-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div class="shield-pulse"></div>
+            </div>
+            <div class="brand-text">
+                <span class="brand-title">CYBER<span class="accent-text">SHIELD</span></span>
+                <span class="brand-subtitle">INTELLIGENT NIDS & DEFENSE ENGINE</span>
+            </div>
+        </div>
+
+        <nav class="cyber-nav">
+            <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                <i class="fa-solid fa-satellite-dish"></i> SOC Dashboard
+            </a>
+            <a href="{{ url_for('scanner_page') }}" class="nav-link {% if request.path == '/scanner' %}active{% endif %}">
+                <i class="fa-solid fa-microscope"></i> Packet Inspector & Scanner
+            </a>
+            <a href="{{ url_for('firewall_page') }}" class="nav-link {% if request.path == '/firewall' %}active{% endif %}">
+                <i class="fa-solid fa-fire-burner"></i> Active Defense
+            </a>
+            <a href="{{ url_for('models_page') }}" class="nav-link {% if request.path == '/models' %}active{% endif %}">
+                <i class="fa-solid fa-brain"></i> ML Intelligence
+            </a>
+            <a href="{{ url_for('api_docs_page') }}" class="nav-link {% if request.path == '/api-docs' %}active{% endif %}">
+                <i class="fa-solid fa-terminal"></i> REST API
+            </a>
+        </nav>
+
+        <div class="header-status">
+            <div class="status-pill status-online">
+                <span class="pulse-dot"></span>
+                <span>SYSTEM ARMED</span>
+            </div>
+            <a href="{{ url_for('download_project_zip') }}" class="btn btn-cyan btn-sm" title="Download complete project ZIP archive">
+                <i class="fa-solid fa-file-zipper"></i> Download ZIP
+            </a>
+            <a href="{{ url_for('export_logs') }}" class="btn btn-outline btn-sm" title="Export incident history">
+                <i class="fa-solid fa-download"></i> Export Logs
+            </a>
+            <button id="toggle-audio-btn" class="btn btn-icon btn-sm" title="Toggle audio alert on critical threats">
+                <i class="fa-solid fa-volume-high" id="audio-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Workspace -->
+    <main class="cyber-main container-fluid">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer Status Bar -->
+    <footer class="cyber-footer">
+        <div class="footer-item">
+            <span class="text-muted">ML CORE:</span> <span class="badge badge-cyan">Random Forest + Isolation Forest</span>
+        </div>
+        <div class="footer-item">
+            <span class="text-muted">DATASET BENCHMARK:</span> <span class="badge badge-purple">NSL-KDD / CIC-IDS Aligned</span>
+        </div>
+        <div class="footer-item">
+            <span class="text-muted">SERVER HOST:</span> <span class="text-code">127.0.0.1:5000</span>
+        </div>
+        <div class="footer-item ms-auto">
+            <span class="pulse-dot-green"></span>
+            <span class="text-muted">Active Defense & Real-Time Mitigation Active</span>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

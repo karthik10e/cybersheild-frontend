@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}CyberShield - Active Defense & Firewall Manager{% endblock %}
+
+{% block content %}
+<div class="firewall-container">
+
+    <!-- KPI Row -->
+    <div class="kpi-row mb-4">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-red">
+                <i class="fa-solid fa-hand"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">ACTIVE QUARANTINED IPS</div>
+                <div class="kpi-value text-threat" id="fw-blocked-count">0</div>
+                <div class="kpi-subtext">Drop / Rejection Active</div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-cyan">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">AUTOMATED MITIGATIONS</div>
+                <div class="kpi-value" id="fw-incidents-count">0</div>
+                <div class="kpi-subtext">Real-time Rule Generation</div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-purple">
+                <i class="fa-solid fa-terminal"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">FIREWALL INTEGRATION</div>
+                <div class="kpi-value text-cyan">NETSH & IPTABLES</div>
+                <div class="kpi-subtext">OS Dynamic Rule Generation</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Block & Active Defense Rules -->
+    <div class="firewall-grid mb-4">
+        <!-- Manual Block Form -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-user-slash text-threat"></i> MANUAL IP BAN / ENFORCE BLOCK
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="manual-block-form" onsubmit="handleManualBlock(event)">
+                    <div class="form-group mb-3">
+                        <label>Target IP Address to Block</label>
+                        <input type="text" id="block-ip-input" class="cyber-input" placeholder="e.g. 45.33.32.15" required pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Security Reason / Justification</label>
+                        <input type="text" id="block-reason-input" class="cyber-input" placeholder="e.g. Malicious port reconnaissance activity" required>
+                    </div>
+                    <button type="submit" class="btn btn-threat btn-full">
+                        <i class="fa-solid fa-ban"></i> ENFORCE FIREWALL BLOCK
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Generated OS Firewall Commands -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-code text-cyan"></i> LIVE SYSTEM FIREWALL RULE SYNTHESIS
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted text-sm">Active OS commands synthesized in real-time when malicious IPs are detected:</p>
+                <div class="code-block" id="firewall-rules-code">
+# Windows Command (netsh advfirewall)
+netsh advfirewall firewall add rule name="CyberShield_Block" dir=in action=block remoteip=0.0.0.0
+
+# Linux Command (iptables)
+iptables -A INPUT -s 0.0.0.0 -j DROP
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quarantined IPs Table -->
+    <div class="cyber-card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fa-solid fa-list-ul text-cyan"></i> CURRENTLY BLOCKED / QUARANTINED HOSTS
+            </div>
+            <button class="btn btn-outline btn-xs" onclick="loadFirewallData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="cyber-table">
+                <thead>
+                    <tr>
+                        <th>TARGET IP</th>
+                        <th>BLOCKED TIME</th>
+                        <th>ATTACK TRIGGER</th>
+                        <th>REASON</th>
+                        <th>SYNTHESIZED RULE COMMAND</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="blocked-ips-tbody">
+                    <!-- Populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Incident Audit Log -->
+    <div class="cyber-card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fa-solid fa-clock-rotate-left text-cyan"></i> SECURITY INCIDENTS & AUDIT TRAIL
+            </div>
+            <a href="{{ url_for('export_logs') }}" class="btn btn-outline btn-xs"><i class="fa-solid fa-file-csv"></i> Download CSV</a>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="cyber-table">
+                <thead>
+                    <tr>
+                        <th>INCIDENT #</th>
+                        <th>TIMESTAMP</th>
+                        <th>ATTACKER IP</th>
+                        <th>TARGET IP:PORT</th>
+                        <th>PROTOCOL</th>
+                        <th>THREAT CATEGORY</th>
+                        <th>CONFIDENCE</th>
+                        <th>DEFENSE ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="incidents-tbody">
+                    <!-- Populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/firewall.js') }}"></script>
+{% endblock %}

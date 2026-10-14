@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}CyberShield - REST API Reference & Interactive Sandbox{% endblock %}
+
+{% block content %}
+<div class="api-container">
+
+    <div class="cyber-card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fa-solid fa-code text-cyan"></i> CYBERSHIELD REST API SPECIFICATIONS
+            </div>
+            <span class="badge badge-cyan">v1.0.0 JSON REST API</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                CyberShield exposes high-performance HTTP endpoints for SIEM integration, remote packet ingestion, automated mitigation webhooks, and programmatic threat queries.
+            </p>
+        </div>
+    </div>
+
+    <!-- API Endpoints List & Sandbox -->
+    <div class="firewall-grid mb-4">
+        <!-- Endpoint Index -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-list-ol text-cyan"></i> AVAILABLE ENDPOINTS
+                </div>
+            </div>
+            <div class="card-body api-endpoint-list">
+                <div class="api-item" onclick="setApiSandbox('predict')">
+                    <span class="badge badge-post">POST</span>
+                    <span class="api-path">/api/predict</span>
+                    <span class="api-desc">Deep inspection on single packet JSON</span>
+                </div>
+                <div class="api-item" onclick="setApiSandbox('stats')">
+                    <span class="badge badge-get">GET</span>
+                    <span class="api-path">/api/stats</span>
+                    <span class="api-desc">System telemetry & threat counters</span>
+                </div>
+                <div class="api-item" onclick="setApiSandbox('packets')">
+                    <span class="badge badge-get">GET</span>
+                    <span class="api-path">/api/packets/recent</span>
+                    <span class="api-desc">Retrieve latest inspected packets</span>
+                </div>
+                <div class="api-item" onclick="setApiSandbox('burst')">
+                    <span class="badge badge-post">POST</span>
+                    <span class="api-path">/api/simulate/burst</span>
+                    <span class="api-desc">Inject instant burst attack simulation</span>
+                </div>
+                <div class="api-item" onclick="setApiSandbox('firewall_block')">
+                    <span class="badge badge-post">POST</span>
+                    <span class="api-path">/api/firewall/block</span>
+                    <span class="api-desc">Manually quarantine / block IP</span>
+                </div>
+                <div class="api-item" onclick="setApiSandbox('firewall_list')">
+                    <span class="badge badge-get">GET</span>
+                    <span class="api-path">/api/firewall/list</span>
+                    <span class="api-desc">Retrieve active blocklist & audit logs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Sandbox -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-play text-cyan"></i> INTERACTIVE API TEST SANDBOX
+                </div>
+                <button class="btn btn-cyan btn-xs" onclick="executeSandboxRequest()">
+                    <i class="fa-solid fa-paper-plane"></i> Send Request
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="form-group mb-2">
+                    <label>Method & Endpoint:</label>
+                    <div class="d-flex gap-2">
+                        <select id="sandbox-method" class="cyber-input" style="width: 100px;">
+                            <option value="POST">POST</option>
+                            <option value="GET">GET</option>
+                        </select>
+                        <input type="text" id="sandbox-url" class="cyber-input" value="/api/predict">
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>Request JSON Payload:</label>
+                    <textarea id="sandbox-payload" class="cyber-input code-area" rows="8">{
+  "protocol_type": "tcp",
+  "service": "http",
+  "flag": "S0",
+  "src_bytes": 0,
+  "dst_bytes": 0,
+  "count": 450,
+  "srv_count": 420,
+  "serror_rate": 0.98,
+  "_meta": {
+    "src_ip": "45.33.32.18",
+    "dst_ip": "192.168.1.10",
+    "dst_port": 80,
+    "protocol": "TCP"
+  }
+}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Response Output:</label>
+                    <pre id="sandbox-response" class="code-block" style="max-height: 250px; overflow-y: auto;">Click "Send Request" to test...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const samplePayloads = {
+        'predict': {
+            method: 'POST',
+            url: '/api/predict',
+            payload: JSON.stringify({
+                protocol_type: "tcp",
+                service: "http",
+                flag: "S0",
+                src_bytes: 0,
+                dst_bytes: 0,
+                count: 450,
+                srv_count: 420,
+                serror_rate: 0.98,
+                _meta: {
+                    src_ip: "45.33.32.18",
+                    dst_ip: "192.168.1.10",
+                    dst_port: 80,
+                    protocol: "TCP"
+                }
+            }, null, 2)
+        },
+        'stats': {
+            method: 'GET',
+            url: '/api/stats',
+            payload: ''
+        },
+        'packets': {
+            method: 'GET',
+            url: '/api/packets/recent?limit=10',
+            payload: ''
+        },
+        'burst': {
+            method: 'POST',
+            url: '/api/simulate/burst',
+            payload: JSON.stringify({
+                attack: "syn_flood",
+                count: 15
+            }, null, 2)
+        },
+        'firewall_block': {
+            method: 'POST',
+            url: '/api/firewall/block',
+            payload: JSON.stringify({
+                ip: "198.51.100.99",
+                reason: "Automated SIEM Alert API Integration"
+            }, null, 2)
+        },
+        'firewall_list': {
+            method: 'GET',
+            url: '/api/firewall/list',
+            payload: ''
+        }
+    };
+
+    function setApiSandbox(endpointKey) {
+        const item = samplePayloads[endpointKey];
+        if (item) {
+            document.getElementById('sandbox-method').value = item.method;
+            document.getElementById('sandbox-url').value = item.url;
+            document.getElementById('sandbox-payload').value = item.payload;
+        }
+    }
+
+    async function executeSandboxRequest() {
+        const method = document.getElementById('sandbox-method').value;
+        const url = document.getElementById('sandbox-url').value;
+        const payloadText = document.getElementById('sandbox-payload').value;
+        const respBox = document.getElementById('sandbox-response');
+
+        respBox.textContent = 'Sending request...';
+
+        try {
+            const opts = { method: method };
+            if (method === 'POST') {
+                opts.headers = { 'Content-Type': 'application/json' };
+                opts.body = payloadText;
+            }
+            const res = await fetch(url, opts);
+            const data = await res.json();
+            respBox.textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+            respBox.textContent = 'Error: ' + err.message;
+        }
+    }
+</script>
+{% endblock %}

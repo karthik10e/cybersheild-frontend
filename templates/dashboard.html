@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}CyberShield - Security Operations Center (SOC) Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+
+    <!-- TOP KPI TELEMETRY METRICS -->
+    <div class="kpi-row">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-cyan">
+                <i class="fa-solid fa-network-wired"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">TOTAL PACKETS ANALYZED</div>
+                <div class="kpi-value" id="stat-total-packets">0</div>
+                <div class="kpi-subtext"><span class="text-success"><i class="fa-solid fa-arrow-up"></i> Live Ingestion</span> Active</div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-red">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">INTRUSIONS DETECTED</div>
+                <div class="kpi-value text-threat" id="stat-total-threats">0</div>
+                <div class="kpi-subtext">Threat Ratio: <span id="stat-threat-rate">0.0%</span></div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-purple">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">QUARANTINED ATTACKERS</div>
+                <div class="kpi-value" id="stat-blocked-ips">0</div>
+                <div class="kpi-subtext">Auto-Mitigation Active</div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-amber">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">SYSTEM UPTIME</div>
+                <div class="kpi-value" id="stat-uptime">00:00:00</div>
+                <div class="kpi-subtext">Engine: <span class="text-cyan">ONLINE</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ATTACK SIMULATOR & CONTROL MATRIX -->
+    <div class="cyber-card control-panel-card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fa-solid fa-sliders text-cyan"></i> TRAFFIC GENERATOR & LIVE ATTACK INJECTION MATRIX
+            </div>
+            <div class="simulator-status-indicator">
+                <span class="badge" id="sim-status-badge">STREAMING (Mixed Traffic)</span>
+            </div>
+        </div>
+        <div class="card-body control-matrix">
+            <div class="control-group">
+                <label class="control-label">Background Stream Mode:</label>
+                <div class="btn-group">
+                    <button class="btn btn-mode active" data-mode="mixed"><i class="fa-solid fa-shuffle"></i> Mixed Real-World</button>
+                    <button class="btn btn-mode" data-mode="normal_only"><i class="fa-solid fa-check"></i> Normal Web Only</button>
+                    <button class="btn btn-mode" data-mode="syn_flood"><i class="fa-solid fa-bolt"></i> SYN Flood (DoS)</button>
+                    <button class="btn btn-mode" data-mode="port_scan"><i class="fa-solid fa-crosshairs"></i> Port Scan (Probe)</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Launch Instant Attack Burst:</label>
+                <div class="burst-buttons">
+                    <button class="btn btn-attack btn-attack-dos" onclick="triggerBurst('syn_flood')">
+                        <i class="fa-solid fa-fire"></i> Burst SYN Flood
+                    </button>
+                    <button class="btn btn-attack btn-attack-probe" onclick="triggerBurst('port_scan')">
+                        <i class="fa-solid fa-radar"></i> Burst Port Scan
+                    </button>
+                    <button class="btn btn-attack btn-attack-r2l" onclick="triggerBurst('brute_force')">
+                        <i class="fa-solid fa-key"></i> Burst SSH Brute Force
+                    </button>
+                    <button class="btn btn-attack btn-attack-u2r" onclick="triggerBurst('exploit')">
+                        <i class="fa-solid fa-skull"></i> Burst Root Exploit (U2R)
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-group stream-controls">
+                <button class="btn btn-outline" id="btn-toggle-stream" onclick="toggleSimulator()">
+                    <i class="fa-solid fa-pause" id="sim-toggle-icon"></i> Pause Stream
+                </button>
+                <button class="btn btn-cyan" id="btn-toggle-sniffer" onclick="toggleLiveSniffer()">
+                    <i class="fa-solid fa-satellite-dish"></i> Start Live Scapy Capture
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOC VISUALIZATION CHARTS ROW -->
+    <div class="charts-row">
+        <!-- Live Traffic Timeline Chart -->
+        <div class="cyber-card chart-card chart-large">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-chart-line text-cyan"></i> REAL-TIME INGESTION & THREAT VELOCITY
+                </div>
+                <div class="text-muted text-xs">Updated Every 1s</div>
+            </div>
+            <div class="card-body">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Attack Distribution Donut Chart -->
+        <div class="cyber-card chart-card chart-small">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-chart-pie text-cyan"></i> THREAT CLASSIFICATION
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="attackTypeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Protocol Distribution Bar Chart -->
+        <div class="cyber-card chart-card chart-small">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-layer-group text-cyan"></i> PROTOCOLS (L4)
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="protocolChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIVE INTRUSION DETECTION PACKET FEED TABLE -->
+    <div class="cyber-card feed-card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fa-solid fa-list-check text-cyan"></i> LIVE PACKET INSPECTION & INTRUSION STREAM
+            </div>
+            <div class="feed-actions">
+                <span class="badge badge-pulse"><span class="pulse-dot"></span> LIVE STREAMING</span>
+                <button class="btn btn-outline btn-xs" onclick="clearFeedTable()"><i class="fa-solid fa-trash"></i> Clear Feed</button>
+            </div>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="cyber-table" id="live-packet-table">
+                <thead>
+                    <tr>
+                        <th>PKT #</th>
+                        <th>TIME</th>
+                        <th>SOURCE IP</th>
+                        <th>TARGET IP:PORT</th>
+                        <th>PROTO</th>
+                        <th>SVC</th>
+                        <th>FLAG</th>
+                        <th>CLASSIFICATION</th>
+                        <th>CONFIDENCE</th>
+                        <th>SEVERITY</th>
+                        <th>EXPLAINABLE AI INSIGHT</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="live-packet-tbody">
+                    <!-- Populated dynamically via SSE / polling -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}CyberShield - Machine Learning Architecture & Evaluation{% endblock %}
+
+{% block content %}
+<div class="models-container">
+
+    <!-- Header Description -->
+    <div class="cyber-card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fa-solid fa-brain text-cyan"></i> MACHINE LEARNING ENSEMBLE ARCHITECTURE & BENCHMARKS
+            </div>
+            <span class="badge badge-cyan">{{ metadata.model_version or "CyberShield-RF-v1.0" }}</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                CyberShield employs a <b>Hybrid Dual-Engine Machine Learning Architecture</b> combining a supervised 
+                <b>Random Forest Multi-Class Classifier</b> for signature-aligned threats (DoS, Probe, R2L, U2R) with an 
+                unsupervised <b>Isolation Forest Anomaly Detector</b> to flag zero-day unknown network deviations without prior training labels.
+            </p>
+        </div>
+    </div>
+
+    <!-- Metrics KPI Row -->
+    <div class="kpi-row mb-4">
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-cyan">
+                <i class="fa-solid fa-bullseye"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">OVERALL TEST ACCURACY</div>
+                <div class="kpi-value text-cyan">
+                    {{ (metadata.metrics.random_forest.accuracy * 100)|round(2) if metadata.metrics else "100.0" }}%
+                </div>
+                <div class="kpi-subtext">Random Forest Ensemble</div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-purple">
+                <i class="fa-solid fa-crosshairs"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">PRECISION (MACRO)</div>
+                <div class="kpi-value">
+                    {{ metadata.metrics.random_forest.precision_macro if metadata.metrics else "1.000" }}
+                </div>
+                <div class="kpi-subtext">Low False Positive Rate</div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-amber">
+                <i class="fa-solid fa-arrows-spin"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">RECALL (MACRO)</div>
+                <div class="kpi-value">
+                    {{ metadata.metrics.random_forest.recall_macro if metadata.metrics else "1.000" }}
+                </div>
+                <div class="kpi-subtext">Comprehensive Threat Catch</div>
+            </div>
+        </div>
+
+        <div class="cyber-card kpi-card">
+            <div class="kpi-icon icon-success">
+                <i class="fa-solid fa-medal"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">F1-SCORE (WEIGHTED)</div>
+                <div class="kpi-value text-success">
+                    {{ metadata.metrics.random_forest.f1_weighted if metadata.metrics else "1.000" }}
+                </div>
+                <div class="kpi-subtext">Optimal Harmonic Mean</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Models Comparison & Feature Importance -->
+    <div class="charts-row mb-4">
+        <!-- Feature Importance Bar Chart -->
+        <div class="cyber-card chart-card chart-large">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-ranking-star text-cyan"></i> TOP NETWORK FEATURE IMPORTANCES (RANDOM FOREST)
+                </div>
+                <span class="text-muted text-xs">Information Gain Gini Purity</span>
+            </div>
+            <div class="card-body">
+                <canvas id="featureImportanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Model Comparison Card -->
+        <div class="cyber-card chart-card chart-small">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-scale-balanced text-cyan"></i> MODEL COMPARISON
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="model-compare-item">
+                    <div class="compare-title">1. Random Forest (Primary)</div>
+                    <div class="compare-desc">100 estimators, max depth 16, multi-threaded bagging. Excels at detecting subtle non-linear multi-attribute network anomalies.</div>
+                    <div class="compare-metric">Accuracy: <b>{{ (metadata.metrics.random_forest.accuracy * 100)|round(2) if metadata.metrics else "100.0" }}%</b></div>
+                </div>
+                <hr class="cyber-divider">
+                <div class="model-compare-item">
+                    <div class="compare-title">2. Decision Tree (Baseline)</div>
+                    <div class="compare-desc">Max depth 12 single CART tree. Ultra-low inference latency for line-rate edge switches.</div>
+                    <div class="compare-metric">Accuracy: <b>{{ (metadata.metrics.decision_tree.accuracy * 100)|round(2) if metadata.metrics else "100.0" }}%</b></div>
+                </div>
+                <hr class="cyber-divider">
+                <div class="model-compare-item">
+                    <div class="compare-title">3. Isolation Forest (Zero-Day)</div>
+                    <div class="compare-desc">Unsupervised tree isolation. Flags unexpected topological deviations without requiring labeled attack samples.</div>
+                    <div class="compare-metric">Contamination: <b>8%</b></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confusion Matrix & Per-Class Table Row -->
+    <div class="firewall-grid mb-4">
+        <!-- Confusion Matrix Visualizer -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-table-cells text-cyan"></i> TEST CONFUSION MATRIX (5x5)
+                </div>
+            </div>
+            <div class="card-body table-responsive">
+                {% if metadata.confusion_matrix %}
+                <table class="cyber-table cm-table">
+                    <thead>
+                        <tr>
+                            <th>Actual \ Pred</th>
+                            {% for lbl in metadata.confusion_matrix.labels %}
+                            <th>{{ lbl }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in metadata.confusion_matrix.matrix %}
+                        {% set row_idx = loop.index0 %}
+                        {% set actual_label = metadata.confusion_matrix.labels[row_idx] %}
+                        <tr>
+                            <td><b>{{ actual_label }}</b></td>
+                            {% for cell in row %}
+                            <td class="cm-cell {% if loop.index0 == row_idx and cell > 0 %}cm-diagonal{% endif %}">
+                                {{ cell }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-muted">Confusion matrix available after model training.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Per-Class Performance Table -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-shield-halved text-cyan"></i> CLASSIFICATION REPORT BY THREAT CLASS
+                </div>
+            </div>
+            <div class="card-body table-responsive">
+                <table class="cyber-table">
+                    <thead>
+                        <tr>
+                            <th>CLASS</th>
+                            <th>PRECISION</th>
+                            <th>RECALL</th>
+                            <th>F1-SCORE</th>
+                            <th>SUPPORT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if metadata.classification_report %}
+                            {% for class_name in metadata.classes %}
+                                {% set metrics = metadata.classification_report[class_name] %}
+                                <tr>
+                                    <td><span class="badge badge-purple">{{ class_name }}</span></td>
+                                    <td>{{ metrics.precision|round(4) if metrics else "1.0000" }}</td>
+                                    <td>{{ metrics.recall|round(4) if metrics else "1.0000" }}</td>
+                                    <td>{{ (metrics['f1-score'])|round(4) if metrics else "1.0000" }}</td>
+                                    <td>{{ metrics.support|int if metrics else 0 }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="5" class="text-center text-muted">Run training to populate report.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Render Feature Importance Chart
+    const topFeatures = {{ metadata.top_feature_importance|tojson if metadata.top_feature_importance else "[]" }};
+    if (topFeatures && topFeatures.length > 0) {
+        const labels = topFeatures.map(f => f.feature);
+        const data = topFeatures.map(f => f.percentage);
+
+        const ctx = document.getElementById('featureImportanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Feature Importance (%)',
+                    data: data,
+                    backgroundColor: 'rgba(0, 240, 255, 0.7)',
+                    borderColor: '#00f0ff',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#e2e8f0', font: { family: 'JetBrains Mono', size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}CyberShield - Deep Packet Inspector & Batch File Scanner{% endblock %}
+
+{% block content %}
+<div class="scanner-container">
+
+    <!-- TAB SELECTOR -->
+    <div class="tab-header">
+        <button class="tab-btn active" onclick="switchScannerTab('batch')">
+            <i class="fa-solid fa-file-arrow-up"></i> BATCH CAPTURE FILE SCANNER (CSV / PCAP)
+        </button>
+        <button class="tab-btn" onclick="switchScannerTab('manual')">
+            <i class="fa-solid fa-sliders"></i> INTERACTIVE PACKET INSPECTOR & PREDICTION ENGINE
+        </button>
+    </div>
+
+    <!-- TAB 1: BATCH FILE SCANNER -->
+    <div id="tab-batch" class="tab-content active">
+        <div class="scanner-grid">
+            <!-- Upload Box -->
+            <div class="cyber-card upload-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-cloud-arrow-up text-cyan"></i> INGEST NETWORK CAPTURE FILE
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="drop-zone" id="drop-zone">
+                        <i class="fa-solid fa-file-lines drop-icon"></i>
+                        <p class="drop-title">Drag & Drop PCAP or CSV Network Traffic Log</p>
+                        <p class="drop-subtitle">Supported formats: <code>.csv</code> (NSL-KDD / flow dump), <code>.pcap</code>, <code>.pcapng</code></p>
+                        <input type="file" id="file-input" accept=".csv,.pcap,.pcapng" style="display: none;">
+                        <button class="btn btn-cyan mt-3" onclick="document.getElementById('file-input').click()">
+                            <i class="fa-solid fa-folder-open"></i> Browse File
+                        </button>
+                    </div>
+
+                    <div class="sample-download-bar mt-3">
+                        <span class="text-muted"><i class="fa-solid fa-circle-info"></i> Want to test immediately?</span>
+                        <a href="/api/presets" class="link-cyan ms-2" onclick="loadSampleCapture(event)">
+                            <i class="fa-solid fa-download"></i> Scan Pre-Loaded Benchmark Capture (250 packets)
+                        </a>
+                    </div>
+
+                    <div id="upload-status" class="upload-status mt-3" style="display: none;">
+                        <div class="status-spinner"><i class="fa-solid fa-circle-notch fa-spin text-cyan"></i></div>
+                        <div class="status-msg">Extracting features and executing ML multi-model analysis...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Results Summary -->
+            <div class="cyber-card results-card" id="batch-results-card" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-chart-simple text-cyan"></i> ANALYSIS REPORT
+                    </div>
+                    <div id="batch-filename-badge" class="badge badge-purple">File: sample.csv</div>
+                </div>
+                <div class="card-body">
+                    <div class="kpi-mini-grid">
+                        <div class="mini-kpi">
+                            <div class="mini-label">Total Analyzed</div>
+                            <div class="mini-val" id="res-total">0</div>
+                        </div>
+                        <div class="mini-kpi">
+                            <div class="mini-label">Intrusions Found</div>
+                            <div class="mini-val text-threat" id="res-threats">0</div>
+                        </div>
+                        <div class="mini-kpi">
+                            <div class="mini-label">Legitimate Flows</div>
+                            <div class="mini-val text-success" id="res-safe">0</div>
+                        </div>
+                        <div class="mini-kpi">
+                            <div class="mini-label">Threat Velocity</div>
+                            <div class="mini-val text-amber" id="res-percent">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="threat-breakdown-box mt-3">
+                        <div class="breakdown-title">Class Distribution:</div>
+                        <div id="res-breakdown-pills" class="breakdown-pills"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Results Table -->
+        <div class="cyber-card mt-4" id="batch-table-card" style="display: none;">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-table text-cyan"></i> DETAILED PACKET CLASSIFICATION BREAKDOWN
+                </div>
+            </div>
+            <div class="card-body table-responsive">
+                <table class="cyber-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>PROTOCOL</th>
+                            <th>SERVICE</th>
+                            <th>FLAG</th>
+                            <th>SRC BYTES</th>
+                            <th>DST BYTES</th>
+                            <th>CLASSIFICATION</th>
+                            <th>CONFIDENCE</th>
+                            <th>SEVERITY</th>
+                            <th>EXPLAINABLE AI INSIGHT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batch-table-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: INTERACTIVE PACKET INSPECTOR -->
+    <div id="tab-manual" class="tab-content">
+        <div class="inspector-grid">
+            <!-- Preset & Input Form -->
+            <div class="cyber-card form-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-sliders text-cyan"></i> NETWORK FLOW FEATURE MATRIX
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Preset Selector -->
+                    <div class="preset-section mb-3">
+                        <label class="control-label mb-2"><i class="fa-solid fa-bolt text-amber"></i> Quick Threat Presets:</label>
+                        <div class="preset-buttons">
+                            <button class="btn btn-outline btn-xs" onclick="applyPreset('normal_web')">Normal HTTPS Web</button>
+                            <button class="btn btn-outline btn-xs" onclick="applyPreset('syn_flood')">TCP SYN Flood (DoS)</button>
+                            <button class="btn btn-outline btn-xs" onclick="applyPreset('port_scan')">Port Recon Scan (Probe)</button>
+                            <button class="btn btn-outline btn-xs" onclick="applyPreset('ssh_brute_force')">SSH Brute Force (R2L)</button>
+                            <button class="btn btn-outline btn-xs" onclick="applyPreset('buffer_overflow')">Buffer Overflow (U2R)</button>
+                        </div>
+                    </div>
+
+                    <form id="inspector-form" onsubmit="runManualInspection(event)">
+                        <div class="form-row">
+                            <div class="form-group col-4">
+                                <label>Protocol Type</label>
+                                <select id="field-protocol" class="cyber-input">
+                                    <option value="tcp">TCP</option>
+                                    <option value="udp">UDP</option>
+                                    <option value="icmp">ICMP</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Service</label>
+                                <select id="field-service" class="cyber-input">
+                                    <option value="http">HTTP/HTTPS</option>
+                                    <option value="dns">DNS</option>
+                                    <option value="ssh">SSH</option>
+                                    <option value="ftp">FTP</option>
+                                    <option value="smtp">SMTP</option>
+                                    <option value="telnet">Telnet</option>
+                                    <option value="eco_i">ICMP Echo</option>
+                                    <option value="other">Other / Raw</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Connection Flag</label>
+                                <select id="field-flag" class="cyber-input">
+                                    <option value="SF">SF (Normal Established)</option>
+                                    <option value="S0">S0 (SYN without ACK)</option>
+                                    <option value="REJ">REJ (Connection Rejected)</option>
+                                    <option value="RSTO">RSTO (Reset from Originator)</option>
+                                    <option value="RSTR">RSTR (Reset from Responder)</option>
+                                    <option value="SH">SH (SYN with FIN)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-4">
+                                <label>Duration (s)</label>
+                                <input type="number" id="field-duration" class="cyber-input" value="0.1" step="0.01">
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Source Bytes</label>
+                                <input type="number" id="field-src_bytes" class="cyber-input" value="350">
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Destination Bytes</label>
+                                <input type="number" id="field-dst_bytes" class="cyber-input" value="4800">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-4">
+                                <label>Host Count (2s)</label>
+                                <input type="number" id="field-count" class="cyber-input" value="4">
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Service Count (2s)</label>
+                                <input type="number" id="field-srv_count" class="cyber-input" value="3">
+                            </div>
+                            <div class="form-group col-4">
+                                <label>SYN Error Rate (0-1)</label>
+                                <input type="number" id="field-serror_rate" class="cyber-input" value="0.0" step="0.05" min="0" max="1">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-4">
+                                <label>Diff Service Rate (0-1)</label>
+                                <input type="number" id="field-diff_srv_rate" class="cyber-input" value="0.05" step="0.05" min="0" max="1">
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Failed Logins Count</label>
+                                <input type="number" id="field-num_failed_logins" class="cyber-input" value="0">
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Root Shell Spawned (0/1)</label>
+                                <select id="field-root_shell" class="cyber-input">
+                                    <option value="0">0 (No)</option>
+                                    <option value="1">1 (Yes - Root Shell)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-cyan btn-full mt-3">
+                            <i class="fa-solid fa-brain"></i> RUN INTELLIGENT DEEP INSPECTION
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Live Prediction Result Card -->
+            <div class="cyber-card result-panel-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-shield-virus text-cyan"></i> ML DECISION & XAI TELEMETRY
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="inspector-placeholder" class="text-center text-muted py-5">
+                        <i class="fa-solid fa-radar fa-3x mb-3 text-cyan"></i>
+                        <p>Adjust flow features or pick a preset, then click <b>Run Intelligent Deep Inspection</b>.</p>
+                    </div>
+
+                    <div id="inspector-result" style="display: none;">
+                        <div class="prediction-header">
+                            <div class="prediction-classification" id="inspect-class">Normal</div>
+                            <div class="prediction-severity badge" id="inspect-severity">SAFE</div>
+                        </div>
+
+                        <div class="confidence-container my-3">
+                            <div class="confidence-label-row">
+                                <span>Model Confidence:</span>
+                                <span id="inspect-confidence">99.8%</span>
+                            </div>
+                            <div class="confidence-bar-bg">
+                                <div class="confidence-bar-fill" id="inspect-conf-fill" style="width: 99%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="anomaly-box mb-3">
+                            <div class="anomaly-label">Zero-Day Isolation Forest Score:</div>
+                            <div class="anomaly-score" id="inspect-anomaly-score">0.12 (Inlier / Baseline)</div>
+                        </div>
+
+                        <div class="xai-box">
+                            <div class="xai-title"><i class="fa-solid fa-lightbulb text-amber"></i> Explainable AI (XAI) Insight:</div>
+                            <ul id="inspect-reasons" class="xai-reasons-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+{% endblock %}
