@@ -1,0 +1,213 @@
+{
+  "model_version": "CyberShield-RF-v1.0",
+  "trained_at": "2026-10-10 14:34:58",
+  "classes": [
+    "DoS",
+    "Normal",
+    "Probe",
+    "R2L",
+    "U2R"
+  ],
+  "features": {
+    "categorical": [
+      "protocol_type",
+      "service",
+      "flag"
+    ],
+    "numeric": [
+      "duration",
+      "src_bytes",
+      "dst_bytes",
+      "land",
+      "wrong_fragment",
+      "urgent",
+      "hot",
+      "num_failed_logins",
+      "logged_in",
+      "num_compromised",
+      "root_shell",
+      "su_attempted",
+      "num_root",
+      "num_file_creations",
+      "count",
+      "srv_count",
+      "serror_rate",
+      "rerror_rate",
+      "same_srv_rate",
+      "diff_srv_rate",
+      "dst_host_count",
+      "dst_host_srv_count"
+    ],
+    "all_encoded_count": 40
+  },
+  "metrics": {
+    "random_forest": {
+      "accuracy": 1.0,
+      "precision_macro": 1.0,
+      "recall_macro": 1.0,
+      "f1_macro": 1.0,
+      "f1_weighted": 1.0
+    },
+    "decision_tree": {
+      "accuracy": 1.0,
+      "f1_macro": 1.0
+    },
+    "isolation_forest": {
+      "type": "Unsupervised Zero-Day Outlier Detector",
+      "contamination": 0.08
+    }
+  },
+  "classification_report": {
+    "DoS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 720.0
+    },
+    "Normal": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1080.0
+    },
+    "Probe": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 360.0
+    },
+    "R2L": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 168.0
+    },
+    "U2R": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 72.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2400.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2400.0
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "DoS",
+      "Normal",
+      "Probe",
+      "R2L",
+      "U2R"
+    ],
+    "matrix": [
+      [
+        720,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1080,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        360,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        168,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        72
+      ]
+    ]
+  },
+  "top_feature_importance": [
+    {
+      "feature": "dst_host_count",
+      "importance": 0.1867,
+      "percentage": 18.67
+    },
+    {
+      "feature": "duration",
+      "importance": 0.1427,
+      "percentage": 14.27
+    },
+    {
+      "feature": "diff_srv_rate",
+      "importance": 0.0955,
+      "percentage": 9.55
+    },
+    {
+      "feature": "same_srv_rate",
+      "importance": 0.0708,
+      "percentage": 7.08
+    },
+    {
+      "feature": "src_bytes",
+      "importance": 0.0637,
+      "percentage": 6.37
+    },
+    {
+      "feature": "count",
+      "importance": 0.0623,
+      "percentage": 6.23
+    },
+    {
+      "feature": "num_failed_logins",
+      "importance": 0.0545,
+      "percentage": 5.45
+    },
+    {
+      "feature": "dst_bytes",
+      "importance": 0.053,
+      "percentage": 5.3
+    },
+    {
+      "feature": "hot",
+      "importance": 0.0507,
+      "percentage": 5.07
+    },
+    {
+      "feature": "srv_count",
+      "importance": 0.0452,
+      "percentage": 4.52
+    },
+    {
+      "feature": "flag_SF",
+      "importance": 0.0343,
+      "percentage": 3.43
+    },
+    {
+      "feature": "serror_rate",
+      "importance": 0.0256,
+      "percentage": 2.56
+    }
+  ]
+}
